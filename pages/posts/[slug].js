@@ -1,20 +1,20 @@
-import { useRouter } from 'next/router'
-import ErrorPage from 'next/error'
-import Container from '../../components/container'
-import PostBody from '../../components/post-body'
-import Header from '../../components/header'
-import PostHeader from '../../components/post-header'
-import Layout from '../../components/layout'
-import { getPostBySlug, getAllPosts } from '../../lib/api'
-import PostTitle from '../../components/post-title'
-import Head from 'next/head'
-import { CMS_NAME } from '../../lib/constants'
-import markdownToHtml from '../../lib/markdownToHtml'
+import { useRouter } from 'next/router';
+import ErrorPage from 'next/error';
+import { fetchGraphql } from 'react-tinacms-strapi';
+import Container from '../../components/container';
+import PostBody from '../../components/post-body';
+import Header from '../../components/header';
+import PostHeader from '../../components/post-header';
+import Layout from '../../components/layout';
+import PostTitle from '../../components/post-title';
+import Head from 'next/head';
+import { CMS_NAME } from '../../lib/constants';
+import markdownToHtml from '../../lib/markdownToHtml';
 
 export default function Post({ post, morePosts, preview }) {
-  const router = useRouter()
+  const router = useRouter();
   if (!router.isFallback && !post?.slug) {
-    return <ErrorPage statusCode={404} />
+    return <ErrorPage statusCode={404} />;
   }
   return (
     <Layout preview={preview}>
@@ -29,11 +29,14 @@ export default function Post({ post, morePosts, preview }) {
                 <title>
                   {post.title} | Next.js Blog Example with {CMS_NAME}
                 </title>
-                <meta property="og:image" content={post.ogImage.url} />
+                <meta
+                  property="og:image"
+                  content={process.env.STRAPI_URL + post.cover.url}
+                />
               </Head>
               <PostHeader
                 title={post.title}
-                coverImage={post.coverImage}
+                coverImage={process.env.STRAPI_URL + post.cover.url}
                 date={post.date}
                 author={post.author}
               />
@@ -43,20 +46,35 @@ export default function Post({ post, morePosts, preview }) {
         )}
       </Container>
     </Layout>
-  )
+  );
 }
 
 export async function getStaticProps({ params }) {
-  const post = getPostBySlug(params.slug, [
-    'title',
-    'date',
-    'slug',
-    'author',
-    'content',
-    'ogImage',
-    'coverImage',
-  ])
-  const content = await markdownToHtml(post.content || '')
+  const postResults = await fetchGraphql(
+    process.env.STRAPI_URL,
+    `
+    query{
+      posts(where: {slug: "${params.slug}"}){
+        id
+        title
+        date
+        slug
+        content
+        author {
+          name
+          picture { 
+            url
+          }
+        }
+        cover {
+          url
+        }
+      }
+    }
+  `
+  );
+  const post = postResults.data.posts[0];
+  const content = await markdownToHtml(post.content || '');
 
   return {
     props: {
@@ -65,20 +83,29 @@ export async function getStaticProps({ params }) {
         content,
       },
     },
-  }
+  };
 }
 
 export async function getStaticPaths() {
-  const posts = getAllPosts(['slug'])
+  const postResults = await fetchGraphql(
+    process.env.STRAPI_URL,
+    `
+    query{
+      posts{
+        slug
+      }
+    }
+  `
+  );
 
   return {
-    paths: posts.map((post) => {
+    paths: postResults.data.posts.map((post) => {
       return {
         params: {
           slug: post.slug,
         },
-      }
+      };
     }),
     fallback: false,
-  }
+  };
 }

@@ -1,7 +1,7 @@
-import Avatar from '../components/avatar'
-import DateFormater from '../components/date-formater'
-import CoverImage from './cover-image'
-import Link from 'next/link'
+import Avatar from '../components/avatar';
+import DateFormater from '../components/date-formater';
+import CoverImage from './cover-image';
+import Link from 'next/link';
 
 export default function PostPreview({
   title,
@@ -25,7 +25,10 @@ export default function PostPreview({
         <DateFormater dateString={date} />
       </div>
       <p className="text-lg leading-relaxed mb-4">{excerpt}</p>
-      <Avatar name={author.name} picture={author.picture} />
+      <Avatar
+        name={author.name}
+        picture={process.env.STRAPI_URL + author.picture.url}
+      />
     </div>
-  )
+  );
 }

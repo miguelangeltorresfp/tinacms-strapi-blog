@@ -1,4 +1,4 @@
-import PostPreview from '../components/post-preview'
+import PostPreview from '../components/post-preview';
 
 export default function MoreStories({ posts }) {
   return (
@@ -11,7 +11,7 @@ export default function MoreStories({ posts }) {
           <PostPreview
             key={post.slug}
             title={post.title}
-            coverImage={post.coverImage}
+            coverImage={process.env.STRAPI_URL + post.cover.url}
             date={post.date}
             author={post.author}
             slug={post.slug}
@@ -20,5 +20,5 @@ export default function MoreStories({ posts }) {
         ))}
       </div>
     </section>
-  )
+  );
 }
