@@ -35,7 +35,7 @@ export default function Index({ allPosts }) {
   );
 }
 
-export async function getStaticProps() {
+export async function getStaticProps({ params, preview, previewData }) {
   const postResults = await fetchGraphql(
     process.env.STRAPI_URL,
     `
@@ -59,7 +59,13 @@ export async function getStaticProps() {
   `
   );
 
+  if (preview) {
+    return {
+      props: { allPosts: postResults.data.posts, preview, ...previewData },
+    };
+  }
+
   return {
-    props: { allPosts: postResults.data.posts },
+    props: { allPosts: postResults.data.posts, preview: false },
   };
 }

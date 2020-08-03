@@ -49,7 +49,7 @@ export default function Post({ post, morePosts, preview }) {
   );
 }
 
-export async function getStaticProps({ params }) {
+export async function getStaticProps({ params, preview, previewData }) {
   const postResults = await fetchGraphql(
     process.env.STRAPI_URL,
     `
@@ -76,12 +76,26 @@ export async function getStaticProps({ params }) {
   const post = postResults.data.posts[0];
   const content = await markdownToHtml(post.content || '');
 
+  if (preview) {
+    return {
+      props: {
+        post: {
+          ...post,
+          content,
+        },
+        preview,
+        ...previewData,
+      },
+    };
+  }
+
   return {
     props: {
       post: {
         ...post,
         content,
       },
+      preview: false,
     },
   };
 }
